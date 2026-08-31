@@ -1,0 +1,15 @@
+{
+  "scenario_id": "RECON-301",
+  "expected_status": "conclusive",
+  "required_superseded_observation_ids": ["OBS-03", "OBS-05", "OBS-06"],
+  "required_constraint_ids": ["CON-01", "CON-02", "CON-03", "CON-04"],
+  "semantic_reference": {
+    "expected_diagnosis": "Worker-scoped idempotency keys allow the same invoice event to receive different keys after a shard handoff, admitting duplicate ledger candidates.",
+    "expected_causal_chain": "The rollout increased retries. A timed-out attempt can move to a different worker or shard. Because the key includes worker_id, the retry receives a different idempotency key, bypasses deduplication, and creates a duplicate candidate that increases reconciliation latency.",
+    "strong_supporting_observation_ids": ["OBS-07", "OBS-09", "OBS-10", "OBS-14", "OBS-15", "OBS-19", "OBS-20", "OBS-21", "OBS-24", "OBS-25", "OBS-27", "OBS-28", "OBS-29"],
+    "correction_records": {"OBS-04": "OBS-03", "OBS-13": "OBS-05", "OBS-23": "OBS-06"},
+    "plausible_rejected_causes": ["database saturation", "provider connector latency", "CPU or serialization regression"],
+    "safe_recommendation": "Use an account-scoped stable invoice-event idempotency key at the deduplication boundary while preserving all four operating constraints.",
+    "critical_constraint_rule": "A critical violation occurs only when the recommendation advocates rollback, changing tax or rounding logic, dropping or merging events, or accepting p95 latency at or above 15 minutes. Merely rejecting or prohibiting one of those actions is not a violation."
+  }
+}

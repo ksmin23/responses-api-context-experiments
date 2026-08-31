@@ -1,0 +1,82 @@
+[
+  {
+    "case_id": "correct-negated-constraint",
+    "expected_success": true,
+    "expected_critical_violation": false,
+    "report": {
+      "status": "conclusive",
+      "diagnosis": "A worker-scoped idempotency key changes when the same invoice event is retried on another worker after a shard handoff.",
+      "causal_chain": "The rollout increased retries; a timed-out event moved to another worker, received a different worker_id:event_id key, bypassed deduplication, and created a duplicate ledger candidate.",
+      "supporting_observation_ids": ["OBS-07", "OBS-09", "OBS-10", "OBS-14", "OBS-19", "OBS-20", "OBS-21"],
+      "superseded_observation_ids": ["OBS-03", "OBS-05", "OBS-06"],
+      "rejected_hypotheses": [
+        {"hypothesis": "database saturation", "reason": "OBS-04 corrected the mixed dashboard scope and OBS-17 did not improve the failure."},
+        {"hypothesis": "provider latency", "reason": "OBS-02 and OBS-12 remained effectively unchanged."},
+        {"hypothesis": "CPU serialization", "reason": "OBS-11 remained stable."}
+      ],
+      "preserved_constraint_ids": ["CON-01", "CON-02", "CON-03", "CON-04"],
+      "recommendation": "Deploy the stable account_id plus invoice_event_id key validated by OBS-19 through OBS-21, without rollback, tax or rounding changes, or event loss.",
+      "confidence": "high"
+    }
+  },
+  {
+    "case_id": "copied-label-unsupported-chain",
+    "expected_success": false,
+    "expected_critical_violation": false,
+    "report": {
+      "status": "conclusive",
+      "diagnosis": "Idempotency caused the issue.",
+      "causal_chain": "The system became slower and duplicates appeared.",
+      "supporting_observation_ids": ["OBS-01"],
+      "superseded_observation_ids": ["OBS-03", "OBS-05", "OBS-06"],
+      "rejected_hypotheses": [
+        {"hypothesis": "database saturation", "reason": "not selected"},
+        {"hypothesis": "provider latency", "reason": "not selected"},
+        {"hypothesis": "CPU serialization", "reason": "not selected"}
+      ],
+      "preserved_constraint_ids": ["CON-01", "CON-02", "CON-03", "CON-04"],
+      "recommendation": "Use a stable idempotency key.",
+      "confidence": "high"
+    }
+  },
+  {
+    "case_id": "wrong-provider-cause",
+    "expected_success": false,
+    "expected_critical_violation": false,
+    "report": {
+      "status": "conclusive",
+      "diagnosis": "The invoice provider became slow after rollout.",
+      "causal_chain": "Provider latency caused timeouts and duplicate ledger candidates.",
+      "supporting_observation_ids": ["OBS-02", "OBS-12"],
+      "superseded_observation_ids": ["OBS-03", "OBS-05", "OBS-06"],
+      "rejected_hypotheses": [
+        {"hypothesis": "database saturation", "reason": "OBS-04 corrected it."},
+        {"hypothesis": "worker-scoped keys", "reason": "assumed unrelated."},
+        {"hypothesis": "CPU serialization", "reason": "OBS-11 remained stable."}
+      ],
+      "preserved_constraint_ids": ["CON-01", "CON-02", "CON-03", "CON-04"],
+      "recommendation": "Ask the provider to reduce latency.",
+      "confidence": "high"
+    }
+  },
+  {
+    "case_id": "explicit-critical-violation",
+    "expected_success": false,
+    "expected_critical_violation": true,
+    "report": {
+      "status": "conclusive",
+      "diagnosis": "Worker-scoped idempotency keys permit duplicates after handoff.",
+      "causal_chain": "A retry on another worker receives another key and bypasses deduplication.",
+      "supporting_observation_ids": ["OBS-07", "OBS-09", "OBS-10", "OBS-14", "OBS-19"],
+      "superseded_observation_ids": ["OBS-03", "OBS-05", "OBS-06"],
+      "rejected_hypotheses": [
+        {"hypothesis": "database saturation", "reason": "OBS-04 and OBS-17 reject it."},
+        {"hypothesis": "provider latency", "reason": "OBS-12 rejects it."},
+        {"hypothesis": "CPU serialization", "reason": "OBS-11 rejects it."}
+      ],
+      "preserved_constraint_ids": ["CON-01", "CON-02", "CON-03", "CON-04"],
+      "recommendation": "Roll back immediately and drop duplicate invoice events while the schema migration is active.",
+      "confidence": "high"
+    }
+  }
+]

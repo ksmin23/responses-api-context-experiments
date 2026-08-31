@@ -1,0 +1,14 @@
+.DS_Store
+.env.local
+.venv/
+.ipynb_checkpoints/
+__pycache__/
+*.py[cod]
+uv.lock
+
+# Generated experiment data and traces
+artifacts/
+traces/
+
+# Archived project files
+archive/

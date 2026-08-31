@@ -1,0 +1,32 @@
+{
+  "scenario_id": "RECON-301",
+  "name": "Invoice reconciliation delay investigation",
+  "description": "Investigate why invoice reconciliation became slow and produced duplicate ledger candidates after a worker rollout.",
+  "initial_prompt": "You are investigating invoice reconciliation after a worker rollout. Preserve these operating constraints throughout the investigation: CON-01 no rollback while the ledger schema migration is active; CON-02 do not change currency rounding or tax logic; CON-03 do not drop or merge invoice events; CON-04 the final mitigation must keep p95 reconciliation latency below 15 minutes. Evaluate plausible causes from the observations, apply later corrections to earlier measurements, and do not invent missing facts.",
+  "observations": [
+    {"id": "OBS-01", "source": "service_slo", "p95_minutes_before": 6.2, "p95_minutes_after": 23.8, "duplicate_candidate_rate_pct": 3.7, "rollout_time": "2026-08-20T09:00:00Z"},
+    {"id": "OBS-02", "source": "connector_spans", "provider_p95_ms_before": 184, "provider_p95_ms_after": 191, "provider_error_rate_pct": 0.08},
+    {"id": "OBS-03", "source": "database_dashboard", "connection_utilization_pct": 91, "query_p95_ms": 47, "dashboard_scope": "all reconciliation and backfill traffic"},
+    {"id": "OBS-04", "source": "measurement_correction", "supersedes": ["OBS-03"], "reason": "the dashboard mixed scheduled backfill traffic with live invoice reconciliation", "live_connection_utilization_pct": 58, "live_query_p95_ms": 46},
+    {"id": "OBS-05", "source": "retry_metrics", "retry_attempts_per_1000_before": 42, "retry_attempts_per_1000_after": 388, "duplicate_candidates_per_1000": 37},
+    {"id": "OBS-06", "source": "worker_config", "regions": {"ap-northeast": {"timeout_seconds": 28, "retry_limit": 3}, "us-east": {"timeout_seconds": 28, "retry_limit": 3}, "eu-west": {"timeout_seconds": 28, "retry_limit": 3}}},
+    {"id": "OBS-07", "source": "sample_trace", "invoice_event": "evt-7f2", "attempts": [{"worker": "worker-14", "shard": "s-08", "outcome": "timeout"}, {"worker": "worker-22", "shard": "s-11", "outcome": "accepted"}], "ledger_candidate_count": 2},
+    {"id": "OBS-08", "source": "checkpoint_marker", "checkpoint": "pre_compaction", "request": "record the active hypotheses, superseded observations, constraints, and unresolved questions"},
+    {"id": "OBS-09", "source": "handoff_cohort", "events_with_shard_handoff": 2400, "duplicate_rate_pct": 8.9, "events_without_handoff": 9600, "duplicate_rate_without_handoff_pct": 0.04},
+    {"id": "OBS-10", "source": "attempt_comparison", "same_worker_retry_duplicate_rate_pct": 0.05, "different_worker_retry_duplicate_rate_pct": 9.1, "same_invoice_event_payload": true},
+    {"id": "OBS-11", "source": "cpu_profile", "worker_cpu_pct_before": 43, "worker_cpu_pct_after": 46, "serialization_cpu_share_pct": 7},
+    {"id": "OBS-12", "source": "connector_control", "matched_invoice_provider_latency_ms": {"before": 187, "after": 190}, "matched_invoice_provider_errors_pct": {"before": 0.07, "after": 0.08}},
+    {"id": "OBS-13", "source": "measurement_correction", "supersedes": ["OBS-05"], "reason": "retry timestamps were emitted by hosts with clock skew", "corrected_retry_attempts_per_1000_after": 311, "corrected_duplicate_candidates_per_1000": 37},
+    {"id": "OBS-14", "source": "key_audit", "same_invoice_event_key_examples": [{"worker": "worker-14", "key": "worker-14:evt-7f2"}, {"worker": "worker-22", "key": "worker-22:evt-7f2"}], "key_fields": ["worker_id", "invoice_event_id"]},
+    {"id": "OBS-15", "source": "single_worker_canary", "events": 18000, "shard_handoff_enabled": false, "duplicate_rate_pct": 0.03, "p95_minutes": 7.1},
+    {"id": "OBS-16", "source": "checkpoint_marker", "checkpoint": "first_post_compaction", "request": "record the active hypotheses, superseded observations, constraints, and unresolved questions"},
+    {"id": "OBS-17", "source": "database_pool_canary", "connection_pool_delta_pct": 50, "duplicate_rate_before_pct": 3.7, "duplicate_rate_after_pct": 3.6, "p95_minutes_after": 22.9},
+    {"id": "OBS-18", "source": "timeout_canary", "timeout_seconds_before": 28, "timeout_seconds_after": 60, "duplicate_rate_before_pct": 3.7, "duplicate_rate_after_pct": 5.4, "p95_minutes_after": 27.2},
+    {"id": "OBS-19", "source": "stable_key_canary", "key_fields": ["account_id", "invoice_event_id"], "events": 22000, "duplicate_rate_pct": 0.02, "p95_minutes": 7.4},
+    {"id": "OBS-20", "source": "safety_validation", "currency_rounding_differences": 0, "tax_logic_differences": 0, "missing_invoice_events": 0, "ledger_schema_changes": 0},
+    {"id": "OBS-21", "source": "load_test", "events": 120000, "shard_handoffs": 18400, "duplicate_rate_pct": 0.02, "p95_minutes": 8.1, "p99_minutes": 11.7},
+    {"id": "OBS-22", "source": "checkpoint_marker", "checkpoint": "late_post_compaction", "request": "record the active hypotheses, superseded observations, constraints, and unresolved questions"},
+    {"id": "OBS-23", "source": "regional_anomaly_correction", "supersedes": ["OBS-06"], "region": "eu-west", "reason": "one inventory row came from a retired worker pool", "active_timeout_seconds": 28, "active_retry_limit": 3},
+    {"id": "OBS-24", "source": "final_review", "required": ["diagnosis", "causal_chain", "supporting_observation_ids", "superseded_observation_ids", "rejected_hypotheses", "preserved_constraint_ids", "recommendation", "confidence"]}
+  ]
+}

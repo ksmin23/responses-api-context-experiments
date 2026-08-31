@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.1.0",
+  "snapshot_date": "2026-08-25",
+  "currency": "USD",
+  "unit": "per_1m_tokens",
+  "scope": {
+    "provider": "openai",
+    "api": "responses",
+    "modality": "text",
+    "service_tier": "standard",
+    "input_tokens": {
+      "maximum_inclusive": 272000
+    },
+    "models": [
+      "gpt-5.6-sol",
+      "gpt-5.6-terra",
+      "gpt-5.6-luna"
+    ],
+    "notes": [
+      "Base model rates apply to Standard processing for requests with at most 272K input tokens.",
+      "Use service_tier_modifiers and long_context_modifier for other pricing scopes."
+    ]
+  },
+  "aliases": {
+    "gpt-5.6": "gpt-5.6-sol"
+  },
+  "models": {
+    "gpt-5.6-sol": {
+      "input": 4.0,
+      "cached_input": 0.4,
+      "cache_write_input": 5.0,
+      "output": 20.0,
+      "cache_write_multiplier": 1.25,
+      "source": "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+      "notes": [
+        "The gpt-5.6 alias routes to gpt-5.6-sol.",
+        "Cache-write pricing is derived from the documented 1.25x uncached-input multiplier.",
+        "The model page states that promotional pricing is available at least through 2026-11-21."
+      ]
+    },
+    "gpt-5.6-terra": {
+      "input": 2.0,
+      "cached_input": 0.2,
+      "cache_write_input": 2.5,
+      "output": 12.0,
+      "cache_write_multiplier": 1.25,
+      "source": "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+      "notes": [
+        "Cache-write pricing is derived from the documented 1.25x uncached-input multiplier."
+      ]
+    },
+    "gpt-5.6-luna": {
+      "input": 0.2,
+      "cached_input": 0.02,
+      "cache_write_input": 0.25,
+      "output": 1.2,
+      "cache_write_multiplier": 1.25,
+      "source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
+      "notes": [
+        "Cache-write pricing is derived from the documented 1.25x uncached-input multiplier."
+      ]
+    }
+  },
+  "long_context_modifier": {
+    "applies_when_input_tokens_are_greater_than": 272000,
+    "input_multiplier": 2.0,
+    "output_multiplier": 1.5,
+    "scope": "full_request",
+    "notes": [
+      "For prompts above 272K input tokens, the documented multipliers apply to the full request."
+    ]
+  },
+  "service_tier_modifiers": {
+    "fast": {
+      "multiplier": 2.0,
+      "snapshot_date": "2026-08-27",
+      "notes": [
+        "Notebook 03 pins this multiplier separately as FAST_MODE_RATE_MULTIPLIER."
+      ]
+    }
+  },
+  "sources": [
+    "https://developers.openai.com/api/docs/models/gpt-5.6-sol",
+    "https://developers.openai.com/api/docs/models/gpt-5.6-terra",
+    "https://developers.openai.com/api/docs/models/gpt-5.6-luna",
+    "https://developers.openai.com/api/docs/guides/latest-model"
+  ]
+}
