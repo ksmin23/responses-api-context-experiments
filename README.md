@@ -29,7 +29,7 @@ Name new notebooks sequentially, such as `notebooks/02_<topic>.ipynb`. Move logi
 - `02_retained_reasoning_all_turns_gpt_5_6.ipynb` compares `current_turn` and `all_turns` with stored `previous_response_id` chaining across five paired Support Policy v2 profiles. Its labeled learning and boundary phases lead to a feedback-free blind evaluation, allowing quality, reasoning tokens, latency, and cost per success to be assessed separately. Compaction is reserved for Notebook 03.
 - `03_compaction_break_even_gpt_5_6.ipynb` keeps `all_turns`, `previous_response_id`, Fast mode, and tool-output representation fixed while comparing no Compaction with calibrated early, middle, and late Compaction thresholds over a 30-turn invoice-reconciliation investigation. It records the effective service tier and reports Fast-priced, quality-gated, sustained cumulative-cost break-even. See the [August 28 experiment result interpretation](docs/03_compaction_break_even_interpretation_20260828.md) for the saved run's metadata, evidence, and limitations.
 
-For a combined interpretation of the Notebook 02 retained-reasoning results and the Notebook 03 Compaction break-even results, including developer recommendations and comparison with OpenAI's official guidance, see [GPT-5.6 Retained Reasoning and Compaction: Developer Guidance](docs/retained_reasoning_developer_guidance_20260829.md). Superseded documentation, fixtures, and reports are retained under `docs/archive/`, `fixtures/archive/`, and `outputs/archive/`.
+For a combined interpretation of the Notebook 02 retained-reasoning results and the Notebook 03 Compaction break-even results, including developer recommendations and comparison with OpenAI's official guidance, see [GPT-5.6 Retained Reasoning and Compaction: Developer Guidance](docs/retained_reasoning_developer_guidance_20260829.md).
 
 Human-readable reports generated from saved JSON artifacts are stored under
 `outputs/`. See the [Notebook 02 result report](outputs/02_retained_reasoning_results_20260829.md)
@@ -73,9 +73,6 @@ experiment stages run:
 
 - Retained-reasoning results: `artifacts/02_retained_reasoning/`
 - Compaction results and accepted calibration records: `artifacts/03_compaction/`
-
-Archived reports remain available under `outputs/archive/`, but their generated
-runtime artifacts are not included in Git.
 
 ## Testing
 
