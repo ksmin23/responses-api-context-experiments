@@ -4,7 +4,7 @@
 
 > GPT-5.6의 retained reasoning은 항상 더 저렴하고 더 정확하게 만드는 옵션이 아니라, 같은 목표가 이어지는 작업에서 모델이 매번 문제를 다시 해석하지 않도록 하는 기본적인 연속성 메커니즘이다. 짧고 연속적인 작업에서는 `all_turns + previous_response_id`를 기본으로 사용하고, context가 길어지면 품질 게이트와 손익분기점을 측정해 Compaction을 적용해야 한다.
 
-이 메시지는 OpenAI의 공식 권장 사항과 대체로 일치한다. 다만 ARC-AGI-3 사례의 성능 향상을 모든 workload에서 재현할 수 있다는 의미로 확대해서는 안 된다.
+이 메시지는 OpenAI의 공식 권장 사항과 대체로 일치한다. 다만 [ARC-AGI-3 사례](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/)의 성능 향상을 모든 workload에서 재현할 수 있다는 의미로 확대해서는 안 된다.
 
 ## 실험별 핵심 결과
 
@@ -169,7 +169,7 @@ Codex 소스 조사에서도 `store:false`, `reasoning.context: all_turns`, encr
 
 ### 주의해서 표현해야 하는 부분
 
-OpenAI의 ARC-AGI-3 사례는 retained reasoning과 Compaction을 사용했을 때 더 적은 재해석, 더 일관된 장기 전략, 높은 score, 적은 output tokens를 관찰했다. 이것은 해당 장기 게임 workload에서 얻은 강한 사례이지만 모든 workload에 대한 보장은 아니다.
+OpenAI의 [ARC-AGI-3 사례](https://openai.com/index/how-two-settings-tripled-our-arc-agi-3-scores/)는 retained reasoning과 Compaction을 사용했을 때 더 적은 재해석, 더 일관된 장기 전략, 높은 score, 적은 output tokens를 관찰했다. 이것은 해당 장기 게임 workload에서 얻은 강한 사례이지만 모든 workload에 대한 보장은 아니다.
 
 이번 실험에서 재현된 범위는 다음과 같다.
 
