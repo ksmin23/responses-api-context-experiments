@@ -106,4 +106,98 @@ Context가 계속 성장하는 workflow에서는 retained reasoning만 유지하
 
 ### 같은 목표와 가정이 유지되는 작업
 
-`reasoning.context=\
+`reasoning.context="all_turns"`와 `previous_response_id`를 기본으로 사용한다.
+
+적합한 예:
+
+- 동일한 incident를 여러 tool로 조사하는 작업
+- 동일한 고객 정책을 여러 ticket에 반복 적용하는 작업
+- 하나의 코드 변경을 탐색, 구현, 테스트하는 agent workflow
+- 장기 분석에서 새로운 관찰값을 계속 반영하는 작업
+
+### 목표나 가정이 크게 바뀌는 작업
+
+새 response chain을 시작하거나 `current_turn`을 사용한다. 이전 reasoning이 새 목표와 무관하거나 잘못된 가정에 고정되어 있다면 이를 계속 유지하는 것이 오히려 방해가 될 수 있다.
+
+### 긴 작업
+
+고정된 turn 수만으로 Compaction을 실행하지 말고, input-context 성장과 남은 작업 길이를 기준으로 threshold를 정한다. Compaction 비용을 회수할 만큼 후속 turn이 남아 있어야 한다.
+
+### 품질 우선 평가
+
+다음 순서로 실험 결과를 판정한다.
+
+1. 정확도, 안전성, 필수 constraint를 평가한다.
+2. 사전에 정한 품질 게이트를 통과했는지 확인한다.
+3. 통과한 arm 사이에서 latency와 비용을 비교한다.
+4. 실패한 시도의 비용까지 포함한 `cost_per_success`를 계산한다.
+
+### 관측해야 할 지표
+
+- Input tokens
+- Cached-input tokens
+- Cache-write tokens
+- Uncached-input tokens
+- Output tokens
+- Reasoning tokens
+- End-to-end latency와 decision latency
+- Retry와 tool-call error
+- Quality score와 critical violation
+- Total cost와 cost per successful task
+- Effective reasoning context와 response ID chain
+- Compaction 발생 turn과 cumulative break-even turn
+
+### `store=false` 환경
+
+`store=false`라고 retained reasoning을 포기할 필요는 없다. Opaque한 `reasoning.encrypted_content`를 포함한 전체 output item sequence를 순서대로 보존하고 다음 요청에 다시 전달할 수 있다.
+
+Codex 소스 조사에서도 `store:false`, `reasoning.context: all_turns`, encrypted reasoning, 로컬 `ConversationHistory`를 조합하는 구현이 확인되었다. 조건이 맞는 WebSocket continuation에서는 `previous_response_id`와 incremental suffix를 사용하고, 그렇지 않으면 전체 logical input을 재생한다. 이는 `previous_response_id`가 retained reasoning의 유일한 구현 방식이 아니라는 점을 보여준다.
+
+## OpenAI 공식 권장 사항과의 비교
+
+### 일치하는 부분
+
+이번 종합 메시지는 다음 공식 권장 사항과 일치한다.
+
+- GPT-5.6에서는 `all_turns`가 기본 reasoning context다.
+- 목표, 가정, 우선순위가 유지되는 작업에는 `all_turns`가 적합하다.
+- 연속 호출은 `previous_response_id`로 연결할 수 있다.
+- 이전 reasoning이 더 이상 관련 없으면 `current_turn` 또는 새 chain이 적합하다.
+- 장기 workflow에는 Compaction을 사용해 유용한 상태를 보존하면서 context를 줄일 수 있다.
+- 대표성 있는 workload와 최종 품질 기준으로 최적화 효과를 평가해야 한다.
+- `store=false` 또는 ZDR 환경에서는 encrypted reasoning items를 수동으로 전달할 수 있다.
+
+### 주의해서 표현해야 하는 부분
+
+OpenAI의 ARC-AGI-3 사례는 retained reasoning과 Compaction을 사용했을 때 더 적은 재해석, 더 일관된 장기 전략, 높은 score, 적은 output tokens를 관찰했다. 이것은 해당 장기 게임 workload에서 얻은 강한 사례이지만 모든 workload에 대한 보장은 아니다.
+
+이번 실험에서 재현된 범위는 다음과 같다.
+
+- **재현됨:** 같은 목표가 이어질 때 reasoning tokens와 latency 감소
+- **재현됨:** 긴 workflow에서 품질을 유지한 Compaction의 input-context 비용 회수
+- **재현되지 않음:** Retained reasoning으로 인한 명확한 전략 학습 또는 paired 품질 향상
+- **재현되지 않음:** Compaction으로 인한 reasoning/output/latency 감소
+- **일반화할 수 없음:** 모든 workload에서의 총비용 절감률과 보편적인 Compaction threshold
+
+## 최종 권장 메시지
+
+> GPT-5.6에서 동일한 목표가 이어지는 agent workflow라면 retained reasoning을 기본으로 사용하라. 하지만 품질, reasoning, latency, 비용의 개선 폭은 workload에 따라 다르므로 각각 측정해야 한다. 장기 context에는 품질 게이트를 통과하는 범위에서 Compaction을 적용하고, Compaction 비용을 회수할 만큼 충분한 후속 작업이 있을 때만 비용 절감으로 평가하라.
+
+Retained reasoning은 benchmark 결과가 좋을 때만 켜는 실험적 최적화라기보다 작업 연속성을 위한 권장 기본값이다. 반면 Compaction 시점과 비용 절감 주장은 workload별 실험으로 결정해야 한다.
+
+## 근거 자료
+
+### 이 프로젝트의 실험 자료
+
+- [Notebook 02](../notebooks/02_retained_reasoning_all_turns_gpt_5_6.ipynb)
+- [Notebook 02 detailed result interpretation](02_retained_reasoning_interpretation_20260829.md)
+- [Notebook 03](../notebooks/03_compaction_break_even_gpt_5_6.ipynb)
+- [Notebook 03 detailed result interpretation](03_compaction_break_even_interpretation_20260828.md)
+
+### OpenAI 공식 자료
+
+- [GPT-5.6 model guidance](https://developers.openai.com/api/docs/guides/latest-model)
+- [Conversation state guide](https://developers.openai.com/api/docs/guides/conversation-state)
+- [Compaction guide](https://developers.openai.com/api/docs/guides/compaction)
+- [Responses API Compaction reference](https://developers.openai.com/api/reference/resources/responses/methods/compact)
+- [Responses API Create Response reference](https://developers.openai.com/api/reference/cli/resources/responses/methods/create)
