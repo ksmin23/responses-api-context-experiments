@@ -98,3 +98,9 @@ The unit tests do not call the OpenAI API. Running a notebook end to end consume
 - [GPT-5.6 model limits](https://developers.openai.com/api/docs/models/gpt-5.6) — task-model capabilities and limits used by the experiments.
 - [GPT-5.6 Luna](https://developers.openai.com/api/docs/models/gpt-5.6-luna) — evaluator model used by the Compaction benchmark.
 - [Grader Models API](https://developers.openai.com/api/reference/ruby/resources/graders/subresources/grader_models) — semantic grading used for benchmark calibration and quality gates.
+
+## Related Projects
+
+- [explicit-prompt-caching-demo](https://github.com/ksmin23/explicit-prompt-caching-demo) — notebook experiments measuring implicit and explicit prompt caching, cache reads and writes, and latency with the Responses API.
+- [tool-search-prompt-caching-benchmarks](https://github.com/ksmin23/tool-search-prompt-caching-benchmarks) — benchmarks comparing eager tool loading with hosted tool search and explicit prompt caching across tool catalog sizes.
+- [direct-vs-programmatic-tool-calling](https://github.com/ksmin23/direct-vs-programmatic-tool-calling) — benchmarks comparing Direct and Programmatic Tool Calling on deterministic workflows, measuring quality, token usage, latency, and estimated cost.
